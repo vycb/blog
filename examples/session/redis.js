@@ -2,9 +2,9 @@
  * Module dependencies.
  */
 
-var express = require('express');
-var logger = require('morgan');
-var session = require('express-session');
+var express = require('express'),
+		logger = require('morgan'),
+		session = require('express-session');
 
 // pass the express to the connect redis module
 // allowing it to inherit from session.Store
