@@ -4,10 +4,8 @@
 var express = require("express"),
 	logger = require('morgan'),
 	app = module.exports = express(),
-//	bodyParser = require('body-parser'),
-	multiparty = require('multiparty'),
+	Busboy = require('busboy'),
 	util = require('util'),
-	format = util.format,
 	article = require("./article"); // I encapsulated my data objects in a dedicated class
 
 app.use(logger('dev'));
@@ -25,10 +23,29 @@ app.get("/articles", function(req, res){
 			var i = 0, stop = results.length;
 
 			for(i; i < stop; i++){
-				results[i].image = undefined;
+				res.write('<p><b></b>Autor:</b><a href="/article/'
+					+results[i]._id +'">'
+					+results[i].author+"</a></p>");
+
+				res.write('<p><b></b>Content: </b></b>'
+					+results[i].content+"</p>");
+
+				res.write('<img src="/image/'+results[i].fileId+'"/>');
 			}
 
-			res.json(results);
+			res.end();
+		}
+	});
+})
+
+app.get("/image/:id", function(req, res){
+	article.image(req.params.id, res, function(error, result){
+		if(error){
+			res.json(error, 400);
+		}else if(!result){
+			res.send(404);
+		}else{
+			return;
 		}
 	});
 });
@@ -41,8 +58,17 @@ app.get("/article/:id", function(req, res){
 		}else if(!result){
 			res.send(404);
 		}else{
-			result.image = undefined;
-			res.json(result);
+
+			res.write('<p><b></b>Autor:</b><a href="/article/'
+				+ result._id +'">'
+				+ result.author+"</a></p>");
+
+			res.write('<p><b></b>Content: </b></b>'
+				+ result.content+"</p>");
+
+			res.write('<img src="/image/'+ result.fileId+'"/>');
+
+			res.end();
 		}
 	});
 });
@@ -63,43 +89,27 @@ app.get("/article/:id/image", function(req, res){
 
 // save/update a new article
 app.post("/article", function(req, res, next){
-	var form = new multiparty.Form(),
-		imageData, input = {}
-	input.image = {};
+	var form = new Busboy({ headers: req.headers }),
+	input = {};
 
-	form.on('error', next);
-	form.on('field', function(name, val){
+	form.on('field', function(name, val, fieldnameTruncated, valTruncated){
 		if(name == 'author'){
 			input.author = val;
-			/*
-			 if(!input.author){
-			 res.json("author must be specified when saving a new article", 400);
-			 }*/
 		}
 
 		if(name == 'content'){
 			input.content = val;
-			/*if(!input.content){
-			 res.json("content must be specified when saving a new article", 400);
-			 }*/
 		}
 	});
 
-	// listen on part event for image file
-	form.on('part', function(part){
-		if(!part.filename) return;
-		if(part.name !== 'image') return part.resume();
+	form.forminput = input;
 
-		input.image.filename = part.filename;
-		input.image.size = part.byteCount;
-		part.on('data', function(buf){
-//			debugger;
-			imageData += buf;
-		});
+	article.saveFile(form, function(err, gridStore){
+		console.dir(err);
 	});
 
-	form.on('close', function(){
-		article.save(input, imageData, function(err, objects){
+	form.on('finish', function(){
+		article.saveArticle(input, function(err, objects){
 			if(err){
 				res.json(err.message, 400);
 			}else if(objects === 1){     //update
@@ -110,21 +120,12 @@ app.post("/article", function(req, res, next){
 				res.json(input, 201);
 			}
 		});
-
-		/*res.send(format('\nuploaded %s (%d Kb) as %s'
-			, input.image.filename
-			, input.image.size / 1024 | 0
-			, input.author));*/
 	});
 
-	form.parse(req);
+	return req.pipe(form);
 });
 
 if(!module.parent){
 	app.listen(3000);
 	console.log('Express started on port 3000');
 }
-
-/*
- app.listen(3000);
- console.log(format("Express server listening on port %d in %s mode", app.address().port, app.settings.env));*/

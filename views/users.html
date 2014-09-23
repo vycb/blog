@@ -1,0 +1,16 @@
+<% include header.html %>
+
+<h1>Users</h1>
+<ul id="users">
+  <% users.forEach(function(user){ %>
+    <li><%= user.name %> &lt;<%= user.email %>&gt;</li>
+  <% }) %>
+</ul>
+
+<ul id="messages">
+  <% rows.forEach(function(row){ %>
+    <li><%= row.userId %> &lt;<%= row.body%>&gt;</li>
+  <% }) %>
+</ul>
+
+<% include footer.html %>
