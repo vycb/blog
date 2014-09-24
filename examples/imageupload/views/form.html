@@ -1,0 +1,17 @@
+<form method="post" enctype="multipart/form-data" action="/article">
+	<label for="author">Author: </label>
+	<input type="text" name="author" value="<%=orempty(result.author)%>"/>
+	<br/>
+	<label for="content">Content: </label>
+	<br/>
+	<textarea rows="5" cols="100" name="content"><%=orempty(result.content)%></textarea>
+	<br/>
+	<label for="image">Image(optional): </label>
+<% if(typeof result.fileId != 'undefined'){%>
+	<img id="image" src="/image/<%=result.fileId%>"/>
+<% }else{%>
+	<input type="file" name="image"/>
+<% }%>
+	<br/>
+	<input type="submit"/>
+</form>

@@ -31,14 +31,18 @@ exports.findById = function(id, callback){
 
 exports.removeById = function(id, callback){
 	db.collection("articles", function(error, collection){
-		collection.findAndRemove({_id: new ObjectID(id)}, function(err, doc){
+		collection.findAndRemove({_id: new ObjectID(id)}, function(err, doc)
+		{
 			if(!doc || typeof doc.fileId === 'undefined'){
 				callback({message: 'doc not found'});
 				return;
 			}
 
 			new GridStore(db, doc.fileId, 'r').open(function(err, gs){
-				if(typeof gs === 'undefined') return;
+				if(typeof gs === 'undefined'){
+					callback({error: 'file not foun'})
+					return;
+				}
 
 				gs.unlink(callback);
 			});

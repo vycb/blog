@@ -1,6 +1,5 @@
-blog
+# Blog fro nodejs
 ==============
 
-This is testing blog for node.
-
+Testing express, busboy, mongodb, grid
 

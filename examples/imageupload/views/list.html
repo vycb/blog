@@ -1,8 +1,8 @@
 <div>
 	<div id="author"><label for="author">Author: </label>
 	<a title="Edit article" href="/article/<%=result._id%>"><%=result.author%></a></div>
-	<div id="dele"><a href="/article/<%=result._id%>/remove">Remove article</a></div>
-	<br/>
+<div>	<span id="dele"><a href="/article/<%=result._id%>/remove">Remove article</a></span>	<span id="dele"><a href="/article/<%=result._id%>/edit">Edit article</a></span>
+</div>	<br/>
 	<label for="content">Content: </label>
 	<br/>
 	<div id="content" class="content"><%=result.content%></div>
