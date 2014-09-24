@@ -2,95 +2,102 @@
  * Created by vach on 9/13/2014.
  */
 var express = require("express"),
-	logger = require('morgan'),
 	app = module.exports = express(),
+	logger = require('morgan'),
+	ejs = require('ejs'),
+	fs = require('fs'),
 	Busboy = require('busboy'),
-	util = require('util'),
-	article = require("./article"); // I encapsulated my data objects in a dedicated class
+	article = require("./article"),
+	list = fs.readFileSync(__dirname + '/views/list.html', 'utf8'),
+	head = fs.readFileSync(__dirname + '/views/head.html', 'utf8'),
+	footer = fs.readFileSync(__dirname + '/views/footer.html', 'utf8')
+	;
+
+app.use(express.static(__dirname + "/views"));
 
 app.use(logger('dev'));
-app.use(express.static(__dirname + "/views"));
-//app.use(bodyParser.urlencoded());
+app.engine('.html', ejs.__express);
+app.set('views', __dirname + '/views');
+app.set('view engine', 'html');
 
 // Routes list all articles
-app.get("/articles", function(req, res){
-	article.findAll(function(error, results){
-		if(error){
-			res.json(error, 400);
-		}else if(!results){
-			res.send(404);
-		}else{
-			var i = 0, stop = results.length;
+app.get("/articles", function(req, res)
+{
+	res.write(ejs.render(head, {
+		filename: 'head',
+		cache: true
+	}));
 
-			for(i; i < stop; i++){
-				res.write('<p><b></b>Autor:</b><a href="/article/'
-					+results[i]._id +'">'
-					+results[i].author+"</a></p>");
-
-				res.write('<p><b></b>Content: </b></b>'
-					+results[i].content+"</p>");
-
-				res.write('<img src="/image/'+results[i].fileId+'"/>');
-			}
-
-			res.end();
+	article.findAll(function(error, result)
+	{
+		if(result instanceof Object){
+			res.write(ejs.render(list, {
+				result: result,
+				cache: true,
+				filename: 'list'
+			}));
 		}
+
+		res.write(ejs.render(footer, {
+			filename: 'footer',
+			cache: true
+		}));
+
+		res.end();
 	});
-})
+});
 
 app.get("/image/:id", function(req, res){
 	article.image(req.params.id, res, function(error, result){
 		if(error){
-			res.json(error, 400);
+//			res.json(error, 400);
 		}else if(!result){
-			res.send(404);
+//			res.send(404);
 		}else{
-			return;
 		}
+		res.end();
 	});
 });
 
-// get the JSON representation of just one article
 app.get("/article/:id", function(req, res){
+	res.write(ejs.render(head, {
+		filename: 'head',
+		cache: true
+	}));
+
 	article.findById(req.params.id, function(error, result){
 		if(error){
-			res.json(error, 400);
+			res.status(400);
 		}else if(!result){
-			res.send(404);
+			res.status(404);
 		}else{
-
-			res.write('<p><b></b>Autor:</b><a href="/article/'
-				+ result._id +'">'
-				+ result.author+"</a></p>");
-
-			res.write('<p><b></b>Content: </b></b>'
-				+ result.content+"</p>");
-
-			res.write('<img src="/image/'+ result.fileId+'"/>');
-
-			res.end();
+			res.write(ejs.render(list, {
+				result: result,
+				cache: true,
+				filename: "list"
+			}));
 		}
+		res.end();
 	});
 });
 
-// get the image of a particular article
-app.get("/article/:id/image", function(req, res){
-	article.findById(req.params.id, function(error, result){
+app.get("/article/:id/remove", function(req, res){
+	article.removeById(req.params.id, function(error, result){
 		if(error){
-			res.json(error, 400);
-		}else if(!result || !result.imageType || !result.image || !result.image.buffer || !result.image.buffer.length){
-			res.send(404);
-		}else{
-			res.contentType(result.imageType);
-			res.end(result.image.buffer, "binary");
+			res.status(400);
 		}
+
+		res.redirect('/articles');
+//			res.contentType(result.imageType);
+//			res.end(result.image.buffer, "binary");
+		res.end();
 	});
 });
 
 // save/update a new article
 app.post("/article", function(req, res, next){
 	var form = new Busboy({ headers: req.headers }),
-	input = {};
+		input = {};
 
 	form.on('field', function(name, val, fieldnameTruncated, valTruncated){
 		if(name == 'author'){
@@ -102,27 +109,28 @@ app.post("/article", function(req, res, next){
 		}
 	});
 
-	form.forminput = input;
+	form.input = input;
 
 	article.saveFile(form, function(err, gridStore){
-		console.dir(err);
+		console.dir(err, gridStore);
 	});
 
 	form.on('finish', function(){
 		article.saveArticle(input, function(err, objects){
 			if(err){
-				res.json(err.message, 400);
-			}else if(objects === 1){     //update
-				input.image = undefined;
-				res.json(input, 200);
+				res.status(400);
+				console.log(err.message);
+			}else if(objects === 1){      //update
+				res.redirect('/article/' + input._id);
+//				res.json(input, 200);
 			}else{                        //insert
-				input.image = undefined;
-				res.json(input, 201);
+				res.redirect('/article/' + input._id);
+				//				res.json(input, 201);
 			}
 		});
+		res.end();
 	});
-
-	return req.pipe(form);
+	req.pipe(form);
 });
 
 if(!module.parent){
