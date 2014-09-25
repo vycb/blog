@@ -14,7 +14,7 @@ var express = require("express"),
 	form = fs.readFileSync(__dirname + '/views/form.html', 'utf8')
 	;
 app.use(logger('dev'));
-app.disable('etag');
+//app.disable('etag');
 app.engine('.html', ejs.__express);
 app.set('views', __dirname + '/views');
 app.set('view engine', 'html');
@@ -73,7 +73,7 @@ app.get("/image/:id", function(req, res){
 });
 
 /**
- * route to show/edit article
+ * route to show edit article's form
  */
 app.get("/article/:id", function(req, res){
 	res.write(ejs.render(head, {
@@ -103,7 +103,8 @@ app.get("/article/:id", function(req, res){
 /**
  * route to remove article
  */
-app.get("/article/:id/remove", function(req, res){
+app.get("/article/:id/remove", function(req, res)
+{
 	article.removeById(req.params.id, function(error, result){
 		if(error){
 			res.status(400);
@@ -111,8 +112,7 @@ app.get("/article/:id/remove", function(req, res){
 		}
 
 		res.redirect('/articles');
-//			res.contentType(result.imageType);
-//			res.end(result.image.buffer, "binary");
+
 		res.end();
 	});
 });
@@ -193,7 +193,7 @@ app.get("/form", function(req, res){
 app.use(express.static(__dirname + "/views"));
 
 app.locals.orempty = function(val){
-	return (typeof val === 'undefined' ? '' : val);
+	return ((!val || typeof val === 'undefined') ? '' : val);
 };
 
 if(!module.parent){
