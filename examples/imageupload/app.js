@@ -42,6 +42,7 @@ function index(req, res)
 			res.write(ejs.render(list, {
 				result: !result ? {} : result,
 				cache: true,
+				orempty: app.locals.orempty,
 				filename: 'list'
 			}));
 		}
@@ -88,10 +89,11 @@ app.get("/article/:id", function(req, res){
 			res.status(404);
 		}
 
-		res.write(ejs.render(list, {
+		res.write(ejs.render(form, {
 			result: result,
 			cache: true,
-			filename: "list"
+			orempty: app.locals.orempty,
+			filename: "form"
 		}));
 
 		res.end();
@@ -123,12 +125,17 @@ app.post("/article", function(req, res, next){
 			input = {};
 
 	form.on('field', function(name, val, fieldnameTruncated, valTruncated){
-		if(name == 'author'){
+		if(name == 'author' && val){
 			input.author = val;
 		}
-
-		if(name == 'content'){
+		if(name == 'content' && val){
 			input.content = val;
+		}
+		if(name == '_id' && val){
+			input._id = val;
+		}
+		if(name == 'prevFileId' && val){
+			input.prevFileId = input.fileId = val;
 		}
 	});
 

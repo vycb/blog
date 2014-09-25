@@ -1,17 +1,28 @@
-<form method="post" enctype="multipart/form-data" action="/article">
+
+<form onsubmit="javascript:var file=$('#file'); if(!file.val()){
+	file.remove()}" method="post" enctype="multipart/form-data" action="/article">
+
+	<input type="hidden" name="_id" value="<%=orempty(result._id)%>"/>
+	<input type="hidden" name="prevFileId" value="<%=orempty(result.fileId)%>"/>
 	<label for="author">Author: </label>
 	<input type="text" name="author" value="<%=orempty(result.author)%>"/>
 	<br/>
 	<label for="content">Content: </label>
 	<br/>
-	<textarea rows="5" cols="100" name="content"><%=orempty(result.content)%></textarea>
+	<textarea rows="5" cols="50" name="content"><%=orempty(result.content)%></textarea>
 	<br/>
 	<label for="image">Image(optional): </label>
-<% if(typeof result.fileId != 'undefined'){%>
+
+	<% if(typeof result.fileId != 'undefined'){%>
 	<img id="image" src="/image/<%=result.fileId%>"/>
-<% }else{%>
-	<input type="file" name="image"/>
+	<br>
+
+	<input type="button" value="Remove Image"
+	  onclick="javascript:$('#image').hide(); $('#filecnt').show()"/>
 <% }%>
-	<br/>
+
+	<div <% if(typeof result.fileId != 'undefined'){%> style="display:none"<%}%> id="filecnt">
+		<input type="file" name="image" id="file"/>
+	</div><br/>
 	<input type="submit"/>
 </form>
