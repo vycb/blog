@@ -118,41 +118,49 @@ app.get("/article/:id/remove", function(req, res){
 });
 
 /**
- * route to save/update an article by POST
+ * route to edit an article
  */
 app.post("/article", function(req, res, next){
-	var form = new Busboy({ headers: req.headers }),
-			input = {};
+	var form = new Busboy({ headers: req.headers });
+			form.apinput = {};
 
 	form.on('field', function(name, val, fieldnameTruncated, valTruncated){
 		if(name == 'author' && val){
-			input.author = val;
+			form.apinput.author = val;
 		}
-		if(name == 'content' && val){
-			input.content = val;
+		else if(name == 'content' && val){
+			form.apinput.content = val;
 		}
-		if(name == '_id' && val){
-			input._id = val;
+		else if(name == '_id' && val){
+			form.apinput._id = val;
 		}
-		if(name == 'prevFileId' && val){
-			input.prevFileId = input.fileId = val;
+		else if(name == 'fileId' && val){
+			form.apinput.fileId = val;
+		}
+		else if(name == 'prevFileId' && val){
+			form.apinput.prevFileId = val;
 		}
 	});
-
-	form.input = input;
 
 	article.saveFile(form, function(err, gridStore){
-		console.log(err, gridStore);
+		console.log(err);
 	});
 
-	form.on('finish', function(){
-		article.saveArticle(input, function(err, objects){
+	form.on('finish', function()
+	{
+		if(!form.apinput.fileId && form.apinput.prevFileId){ //the previous image in doc to be deleted
+			article.fileUnlink(form.apinput.prevFileId, function(error, gs){
+				console.log(error);
+			});
+		}
+
+		article.saveArticle(form.apinput, function(err, objects){
 			if(err){
 				res.status(400);
 				console.log(err.message);
 			}
 			res.headers = null;
-			res.redirect('/article/' + input._id);
+			res.redirect('/article/' + form.apinput._id);
 			res.end();
 		});
 	});
