@@ -9,10 +9,12 @@ var
 	Code = require('mongodb').Code,
 	BSON = require('mongodb').pure().BSON,
 	fs = require("fs"),
+	mongolabstr = 'mongodb://vycb:123@ds039010.mongolab.com:39010/blog',
+	localstr = 'mongodb://localhost:27017/blog',
 	gcollection,
 	db;
 // Initialize connection once
-MongoClient.connect("mongodb://vycb:123@ds039010.mongolab.com:39010/blog",{db: {native_parser: false}}, function(err, database){
+MongoClient.connect(localstr,{db: {native_parser: true}}, function(err, database){
 	if(err) throw err;
 
 	db = database;
@@ -38,17 +40,38 @@ exports.findById = function(id, callback){
 exports.removeById = function(id, callback){
 	if(!id) return;
 
-	gcollection.findAndRemove({_id: new ObjectID(id)}, function(err, doc){
-		if(!doc || !doc.fileId){
-			callback(err, {message: 'doc not found'});
+	gcollection.findAndRemove({_id: new ObjectID(id)}, [['_id', 1]], function(err, doc){
+		if(!doc){
+			callback({message: 'doc not found', err: err});
 			return;
 		}
 
-		exports.fileUnlink(doc.fileId, function(err, gs){
-				console.log(err, {message: 'fileUnlink ok'});
+//		exports.fileUnlink(doc.fileId, function(err, result){
+//
+//			console.log(err, 'fileUnlink ok');
+//
+//			return;
+//		});
+
+		new GridStore(db, new ObjectID(doc.fileId), 'r').open(function(err, gs){
+			if(!gs){
+				callback({error: err, message: 'file not found'});
+				return;
+			}
+
+			gs.unlink(function(err, result){
+				gs.close(callback);
+
+				console.log(['unlink', result?result.filename:result]);
+
+				return;
+			});
+			return;
 		});
 
+		return;
 	});
+	return;
 };
 
 exports.fileUnlink = function(id, callback){
@@ -56,13 +79,24 @@ exports.fileUnlink = function(id, callback){
 
 	new GridStore(db, new ObjectID(id), 'r').open(function(err, gs){
 		if(!gs){
-			callback({error: err, message: 'file not found'}, gs);
+			callback({error: err, message: 'file not found'});
 			return;
 		}
 
-		gs.unlink(callback);
+		gs.unlink(function(err, result){
+			gs.close(callback);
 
+			console.log(['in unlink ok', result.filename]);
+
+			callback(err, result);
+
+			return;
+		});
+
+		return;
 	});
+
+	return;
 };
 
 /**
@@ -75,10 +109,12 @@ exports.image = function(id, res, callback){
 	if(!id) return;
 	// Open a new file
 	new GridStore(db, new ObjectID(id), 'r').open(function(err, gs){
-		if(typeof gs === 'undefined'){
+		if(!gs){
 			res.status(404);
+
 			res.end();
-			return callback({message: "GridStore is undefined"});
+
+			return callback({message: "Image(): GridStore is undefined"});
 		}
 
 		var stream = gs.stream(true);
@@ -88,13 +124,12 @@ exports.image = function(id, res, callback){
 			res.write(chunk);
 		});
 
-		stream.on("end", function(){
-			// Record the end was called
-		});
+		stream.on("end", callback);
 
 		stream.on("close", function(){
 			res.end();
-			callback({message: "on close success"});
+
+			gs.close(callback);
 		});
 
 	});
@@ -104,12 +139,17 @@ exports.saveFile = function(form, callback){
 	// listen on part event for image file
 	form.on('file', function(fieldname, file, filename, encoding, mimetype)
 	{
-
 		form.apinput.fileId = form.apinput.prevFileId ? new ObjectID(form.apinput.prevFileId): new ObjectID(form.apinput.fileId);
 
 		// Open a new file or prevFileId to overwrite
 		new GridStore(db, form.apinput.fileId, filename, 'w').open(function(err, gs)
 		{
+			if(!gs){
+				res.status(404);
+
+				return callback({message: "GridStore is undefined"});
+			}
+
 			form.apinput.contentType = filename;
 			gs.contentType = filename;
 
@@ -126,6 +166,7 @@ exports.saveFile = function(form, callback){
 				gs.close(callback);
 
 				console.log('File [' + fieldname + '] Finished');
+
 				callback(err, gs);
 			});
 		});
