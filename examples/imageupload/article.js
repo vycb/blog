@@ -116,6 +116,8 @@ exports.saveFile = function(form, callback){
 	// listen on part event for image file
 	form.on('file', function(fieldname, file, filename, encoding, mimetype)
 	{
+		if (!filename) return file.resume();
+
 		form.apinput.fileId = form.apinput.prevFileId ? new ObjectID(form.apinput.prevFileId): new ObjectID(form.apinput.fileId);
 
 		// Open a new file or prevFileId to overwrite

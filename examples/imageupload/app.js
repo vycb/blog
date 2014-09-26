@@ -125,6 +125,8 @@ app.post("/article", function(req, res, next){
 			form.apinput = {};
 
 	form.on('field', function(name, val, fieldnameTruncated, valTruncated){
+		if(!file) return;
+
 		if(name == 'author' && val){
 			form.apinput.author = val;
 		}
