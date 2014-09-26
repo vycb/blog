@@ -125,23 +125,10 @@ app.post("/article", function(req, res, next){
 			form.apinput = {};
 
 	form.on('field', function(name, val, fieldnameTruncated, valTruncated){
-		if(!file) return;
+		if(!val) return;
+		else
+			form.apinput[name] = val;
 
-		if(name == 'author' && val){
-			form.apinput.author = val;
-		}
-		else if(name == 'content' && val){
-			form.apinput.content = val;
-		}
-		else if(name == '_id' && val){
-			form.apinput._id = val;
-		}
-		else if(name == 'fileId' && val){
-			form.apinput.fileId = val;
-		}
-		else if(name == 'prevFileId' && val){
-			form.apinput.prevFileId = val;
-		}
 	});
 
 	article.saveFile(form, function(err, gridStore){
