@@ -4,11 +4,7 @@
 var
 	MongoClient = require('mongodb').MongoClient,
 	ObjectID = require('mongodb').ObjectID,
-	Binary = require('mongodb').Binary,
 	GridStore = require('mongodb').GridStore,
-	Code = require('mongodb').Code,
-	BSON = require('mongodb').pure().BSON,
-	fs = require("fs"),
 	mongolabcon = 'mongodb://vycb:123@ds039010.mongolab.com:39010/blog',
 	localcon = 'mongodb://localhost:27017/blog',
 	gcollection,
@@ -84,6 +80,7 @@ exports.image = function(id, res, callback){
 	if(!id){
 		return callback('image: no id');
 	}
+
 	// Open a new file
 	new GridStore(db, new ObjectID(id), 'r').open(function(err, gs){
 		if(!gs){
@@ -93,6 +90,10 @@ exports.image = function(id, res, callback){
 
 			return callback("Image(): GridStore is undefined");
 		}
+
+		res.writeHead(200, {
+			"Content-Type": gs.metadata.mimetype
+		});
 
 		var stream = gs.stream(true);
 
@@ -129,12 +130,12 @@ exports.saveFile = function(form, callback){
 				return callback({message: "GridStore is undefined"});
 			}
 
-			form.apinput.contentType = filename;
-			gs.contentType = filename;
+			gs.contentType = mimetype;
+			gs.metadata = {articleId: new ObjectID(form.apinput._id)};
 
 			file.on('data', function(buf)
 			{
-				gs.write(buf, function(err, gs)
+				gs.write(buf, function(err, res)
 				{
 					console.log('On data: ', err);
 				});

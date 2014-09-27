@@ -8,21 +8,18 @@ var express = require("express"),
 	fs = require('fs'),
 	Busboy = require('busboy'),
 	article = require("./article"),
-	list = fs.readFileSync(__dirname + '/views/list.html', 'utf8'),
-	head = fs.readFileSync(__dirname + '/views/head.html', 'utf8'),
-	footer = fs.readFileSync(__dirname + '/views/footer.html', 'utf8')
-	form = fs.readFileSync(__dirname + '/views/form.html', 'utf8')
+	vh = require("./views/")
 	;
+
 app.use(logger('dev'));
 //app.disable('etag');
-app.engine('.html', ejs.__express);
-app.set('views', __dirname + '/views');
-app.set('view engine', 'html');
+//app.engine('.html', ejs.__express);
+//app.set('views', __dirname + '/views');
+//app.set('view engine', 'html');
 
 // Routes list all articles adn / root
-app.get("/articles", index);
-
 app.get("/", index);
+app.get("/articles", index);
 
 /**
  * routing function for index/show articles
@@ -31,23 +28,24 @@ app.get("/", index);
  */
 function index(req, res)
 {
-	res.write(ejs.render(head, {
+	res.write(vh.head({
 		filename: 'head',
 		cache: true
 	}));
 
 	article.findAll(function(error, result)
 	{
+
 		if(result){
-			res.write(ejs.render(list, {
+			res.write(vh.list({
 				result: !result ? {} : result,
 				cache: true,
-				orempty: app.locals.orempty,
+				orempty: vh.orempty,
 				filename: 'list'
 			}));
 		}
 		else{
-			res.write(ejs.render(footer, {
+			res.write(vh.footer({
 				filename: 'footer',
 				cache: true
 			}));
@@ -76,7 +74,7 @@ app.get("/image/:id", function(req, res){
  * route to show edit article's form
  */
 app.get("/article/:id", function(req, res){
-	res.write(ejs.render(head, {
+	res.write(vh.head({
 		filename: 'head',
 		cache: true
 	}));
@@ -89,10 +87,10 @@ app.get("/article/:id", function(req, res){
 			res.status(404);
 		}
 
-		res.write(ejs.render(form, {
+		res.write(vh.form({
 			result: result,
 			cache: true,
-			orempty: app.locals.orempty,
+			orempty: vh.orempty,
 			filename: "form"
 		}));
 
@@ -131,7 +129,7 @@ app.post("/article", function(req, res, next){
 
 	});
 
-	article.saveFile(form, function(err, gridStore){
+	article.saveFile(form, function(err, gs){
 		console.log(err);
 	});
 
@@ -160,19 +158,19 @@ app.post("/article", function(req, res, next){
  * route to show article's form
  */
 app.get("/form", function(req, res){
-	res.write(ejs.render(head, {
+	res.write(vh.head({
 		filename: 'head',
 		cache: true
 	}));
 
-	res.write(ejs.render(form, {
+	res.write(vh.form({
 		result: {},
 		cache: true,
-		orempty: app.locals.orempty,
+		orempty: vh.orempty,
 		filename: "form"
 	}));
 
-	res.write(ejs.render(footer, {
+	res.write(vh.footer({
 		filename: 'footer',
 		cache: true
 	}));
@@ -181,9 +179,14 @@ app.get("/form", function(req, res){
 
 app.use(express.static(__dirname + "/views"));
 
-app.locals.orempty = function(val){
-	return ((!val || typeof val === 'undefined') ? '' : val);
-};
+app.use(function (req, res) {
+	res.status(404);
+
+	res.write(vh.e404({filename: 'e404', cache: true, url: req.url}));
+
+	res.end();
+});
+
 
 if(!module.parent){
 	app.listen(3000);

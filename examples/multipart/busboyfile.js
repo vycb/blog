@@ -28,12 +28,15 @@ http.createServer(function(req, res){
 			"Content-Type": "image/jpeg"
 		});
 
+
 		/*busboy.on('file', function(fieldname, file, filename, encoding, mimetype){
 			var saveTo = path.join(os.tmpDir(), path.basename(fieldname));
 			file.pipe(fs.createWriteStream(saveTo));
 		});*/
 		busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
+
 			console.log('File [' + fieldname + ']: filename: ' + filename + ', encoding: ' + encoding + ', mimetype: ' + mimetype);
+
 			file.on('data', function(data) {
 				console.log('File [' + fieldname + '] got ' + data.length + ' bytes');
 				res.write(data);
