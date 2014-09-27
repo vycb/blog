@@ -1,3 +1,4 @@
+<% include head.html %>
 
 <form onsubmit="javascript:var file=$('#file'); if(!file.val()){
 	file.remove()}" method="post" enctype="multipart/form-data" action="/article">
@@ -31,3 +32,5 @@
 	</div><br/>
 	<input type="submit"/>
 </form>
+
+<% include footer.html %>

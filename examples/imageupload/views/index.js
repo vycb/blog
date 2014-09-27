@@ -11,7 +11,7 @@ exports.head = ejs.compile(fs.readFileSync(__dirname + '/head.html', 'utf8'), {f
 
 exports.footer = ejs.compile(fs.readFileSync(__dirname + '/footer.html', 'utf8'), {filename: 'footer'});
 
-exports.form = ejs.compile(fs.readFileSync(__dirname + '/form.html', 'utf8'), {filename: 'form'});
+exports.form = ejs.compile(fs.readFileSync(__dirname + '/form.html', 'utf8'), {filename: __dirname+'/form.html'});
 
 exports.e404 = ejs.compile(fs.readFileSync(__dirname + '/404.html', 'utf8'), {filename: 'e404'});
 

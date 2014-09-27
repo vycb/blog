@@ -28,27 +28,18 @@ app.get("/articles", index);
  */
 function index(req, res)
 {
-	res.write(vh.head({
-		filename: 'head',
-		cache: true
-	}));
+	res.write(vh.head());
 
 	article.findAll(function(error, result)
 	{
-
 		if(result){
 			res.write(vh.list({
 				result: !result ? {} : result,
-				cache: true,
-				orempty: vh.orempty,
-				filename: 'list'
+				orempty: vh.orempty
 			}));
 		}
 		else{
-			res.write(vh.footer({
-				filename: 'footer',
-				cache: true
-			}));
+			res.write(vh.footer());
 
 			res.end();
 		}
@@ -74,10 +65,7 @@ app.get("/image/:id", function(req, res){
  * route to show edit article's form
  */
 app.get("/article/:id", function(req, res){
-	res.write(vh.head({
-		filename: 'head',
-		cache: true
-	}));
+	res.write(vh.head());
 
 	article.findById(req.params.id, function(error, result){
 		if(error){
@@ -87,12 +75,7 @@ app.get("/article/:id", function(req, res){
 			res.status(404);
 		}
 
-		res.write(vh.form({
-			result: result,
-			cache: true,
-			orempty: vh.orempty,
-			filename: "form"
-		}));
+		res.write(vh.form({ result: result, orempty: vh.orempty}));
 
 		res.end();
 	});
@@ -158,22 +141,11 @@ app.post("/article", function(req, res, next){
  * route to show article's form
  */
 app.get("/form", function(req, res){
-	res.write(vh.head({
-		filename: 'head',
-		cache: true
-	}));
+	res.write(vh.head());
 
-	res.write(vh.form({
-		result: {},
-		cache: true,
-		orempty: vh.orempty,
-		filename: "form"
-	}));
+	res.write(vh.form({ result: {}, orempty: vh.orempty}));
 
-	res.write(vh.footer({
-		filename: 'footer',
-		cache: true
-	}));
+	res.write(vh.footer());
 	res.end();
 });
 
@@ -182,7 +154,7 @@ app.use(express.static(__dirname + "/views"));
 app.use(function (req, res) {
 	res.status(404);
 
-	res.write(vh.e404({filename: 'e404', cache: true, url: req.url}));
+	res.write(vh.e404({url: req.url}));
 
 	res.end();
 });
