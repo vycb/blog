@@ -133,7 +133,9 @@ exports.saveFile = function(form, callback){
 			gs.contentType = mimetype;
 			gs.metadata = {articleId: new ObjectID(form.apinput._id)};
 
-			file.on('data', function(buf)
+			file.pipe(gs);
+
+			/*file.on('data', function(buf)
 			{
 				gs.write(buf, function(err, res)
 				{
@@ -148,7 +150,7 @@ exports.saveFile = function(form, callback){
 				console.log('File [' + fieldname + '] Finished');
 
 				callback(err, gs);
-			});
+			});*/
 		});
 	});
 };

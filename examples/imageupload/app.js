@@ -12,7 +12,7 @@ var express = require("express"),
 	;
 
 app.use(logger('dev'));
-//app.disable('etag');
+app.disable('etag');
 //app.engine('.html', ejs.__express);
 //app.set('views', __dirname + '/views');
 //app.set('view engine', 'html');
@@ -26,16 +26,15 @@ app.get("/articles", index);
  * @param req
  * @param res
  */
-function index(req, res)
-{
+function index(req, res){
+
 	res.write(vh.head());
 
 	article.findAll(function(error, result)
 	{
 		if(result){
 			res.write(vh.list({
-				result: !result ? {} : result,
-				orempty: vh.orempty
+				result: result || {}
 			}));
 		}
 		else{
@@ -65,7 +64,6 @@ app.get("/image/:id", function(req, res){
  * route to show edit article's form
  */
 app.get("/article/:id", function(req, res){
-	res.write(vh.head());
 
 	article.findById(req.params.id, function(error, result){
 		if(error){
@@ -131,7 +129,7 @@ app.post("/article", function(req, res, next){
 			}
 			res.headers = null;
 			res.redirect('/article/' + form.apinput._id);
-			res.end();
+//			res.end();
 		});
 	});
 	req.pipe(form);
@@ -141,11 +139,9 @@ app.post("/article", function(req, res, next){
  * route to show article's form
  */
 app.get("/form", function(req, res){
-	res.write(vh.head());
 
-	res.write(vh.form({ result: {}, orempty: vh.orempty}));
+	res.write(vh.form({result: {}}));
 
-	res.write(vh.footer());
 	res.end();
 });
 
