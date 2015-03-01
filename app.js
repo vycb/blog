@@ -5,11 +5,11 @@
 var express = require('express'),
 	logger = require('morgan'),
 	errorHandler = require('errorhandler'),
-	serveStatic = require('serve-static'),
+//	serveStatic = require('serve-static'),
 	bodyParser = require('body-parser'),
 	methodOverride = require('method-override'),
 	favicon = require('serve-favicon'),
-	routes = require('./routes')
+	routes = require('./routes'),
     debug = require('debug')('app4')
     ;
 
